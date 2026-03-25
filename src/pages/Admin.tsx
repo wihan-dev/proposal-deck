@@ -1,6 +1,11 @@
 import { useState, useRef } from "react";
-import { Building2, Upload, Sparkles, Eye, GitBranch, ExternalLink, Loader2, Check, ChevronDown, FileText, MessageSquare, BarChart3, Zap } from "lucide-react";
+import {
+  Building2, Upload, Sparkles, GitBranch, ExternalLink, Loader2, Check,
+  ChevronDown, FileText, MessageSquare, BarChart3, Zap, Shield, Users,
+  TrendingUp, AlertTriangle, Download
+} from "lucide-react";
 
+/* ─── CONSTANTS ─── */
 const INDUSTRIES = [
   "FMCG / Consumer Goods",
   "Financial Services / Banking",
@@ -19,101 +24,33 @@ const INDUSTRIES = [
   "Other",
 ];
 
-const STEPS = ["Input", "Generate", "Preview", "Deploy"];
+const STEPS = ["Input", "Generate", "Preview", "Export"];
 
-const USE_CASE_TEMPLATES: Record<string, { feedback: UseCaseItem[]; research: UseCaseItem[] }> = {
-  "FMCG / Consumer Goods": {
-    feedback: [
-      { icon: "📊", title: "Post-Purchase Surveys", desc: "WhatsApp surveys triggered after purchase to track satisfaction, NPS, and churn drivers — automatically and at scale.", tag: "NPS · Churn" },
-      { icon: "📦", title: "In-Store & On-Pack QR", desc: "QR codes on packaging or in-store linking to short WhatsApp conversations for real-time product feedback.", tag: "Retail · QR" },
-      { icon: "🔔", title: "Always-On Feedback Channel", desc: "Persistent WhatsApp channel to surface product issues early — defects, quality changes, stock-outs.", tag: "Early Warning" },
-      { icon: "🧪", title: "Pre-Launch Concept Testing", desc: "Targeted pulses to test consumer reactions to new products, packaging, or messaging before rollout.", tag: "Innovation" },
-    ],
-    research: [
-      { icon: "📈", title: "Tracker Augmentation", desc: "Run parts of brand trackers via WhatsApp to dramatically reduce cost and turnaround time.", tag: "Trackers" },
-      { icon: "🌍", title: "New Market Studies", desc: "Research consumer behaviour in new markets in local languages where traditional panels struggle.", tag: "Market Entry" },
-      { icon: "📱", title: "Product Testing via QR", desc: "QR code follow-ups after trial or delivery. Capture product experience at the moment of use.", tag: "Product Testing" },
-      { icon: "⚡", title: "WhatsApp Screeners", desc: "Faster incidence and recruitment via WhatsApp screeners. Cut recruitment time by 80%.", tag: "Recruitment" },
-    ],
-  },
-  "Financial Services / Banking": {
-    feedback: [
-      { icon: "💳", title: "Post-Transaction Feedback", desc: "WhatsApp surveys triggered after key banking moments — account opening, loan approval, card activation.", tag: "CX · Onboarding" },
-      { icon: "📱", title: "Digital Channel Satisfaction", desc: "Capture real-time feedback on app and online banking experience at point of use.", tag: "Digital CX" },
-      { icon: "🔔", title: "Service Recovery Alerts", desc: "Detect dissatisfaction early through always-on WhatsApp feedback to reduce churn and complaints.", tag: "Churn Prevention" },
-      { icon: "⭐", title: "Branch Experience Audit", desc: "Post-visit research to measure staff engagement, wait times, and service quality across branches.", tag: "Branch CX" },
-    ],
-    research: [
-      { icon: "📈", title: "Financial Wellbeing Tracker", desc: "Recurring tracker on financial literacy, saving habits, and product consideration.", tag: "Tracker" },
-      { icon: "🏦", title: "Product Concept Testing", desc: "Test new financial product ideas with target segments before development investment.", tag: "Innovation" },
-      { icon: "🌍", title: "Inclusive Research", desc: "Reach underbanked and rural populations via WhatsApp in local languages.", tag: "Inclusion" },
-      { icon: "⚡", title: "Competitor Switching Study", desc: "Understand why customers switch banks and what drives loyalty in your market.", tag: "Competitive Intel" },
-    ],
-  },
-  "Insurance": {
-    feedback: [
-      { icon: "📋", title: "Claims Experience Feedback", desc: "Trigger WhatsApp surveys post-claim to track satisfaction with speed, communication, and resolution.", tag: "Claims CX" },
-      { icon: "🔄", title: "Renewal Journey Research", desc: "Understand decision drivers at renewal: price sensitivity, trust, and competitor consideration.", tag: "Retention" },
-      { icon: "📱", title: "Digital Onboarding Audit", desc: "Capture real-time feedback on policy sign-up and digital self-service experience.", tag: "Digital CX" },
-      { icon: "🔔", title: "Service Alert Channel", desc: "Always-on WhatsApp channel to detect policyholder frustration before formal complaints.", tag: "Early Warning" },
-    ],
-    research: [
-      { icon: "📈", title: "Brand Trust Tracker", desc: "Run recurring trust and consideration trackers via WhatsApp at a fraction of traditional cost.", tag: "Tracker" },
-      { icon: "🧪", title: "Product Concept Testing", desc: "Test new insurance products, bundles, or pricing tiers with target segments before launch.", tag: "Innovation" },
-      { icon: "🌍", title: "Underserved Segment Research", desc: "Reach informal and underinsured populations in local languages where panels fail.", tag: "Inclusion" },
-      { icon: "⚡", title: "Agent Channel Research", desc: "Gather feedback from brokers and agents on tools, incentives, and customer needs.", tag: "Distribution" },
-    ],
-  },
-  "Telecommunications": {
-    feedback: [
-      { icon: "📶", title: "Network Experience Feedback", desc: "WhatsApp surveys triggered by network events — outages, plan changes, roaming — to capture real-time CX.", tag: "Network CX" },
-      { icon: "📱", title: "App & USSD Satisfaction", desc: "In-moment feedback on self-service digital channels and app feature usage.", tag: "Digital CX" },
-      { icon: "🔔", title: "Churn Early Warning", desc: "Detect dissatisfaction signals early via always-on WhatsApp to trigger save-desk interventions.", tag: "Churn Prevention" },
-      { icon: "🏪", title: "Retail & Call Centre Audit", desc: "Post-interaction feedback across retail stores and contact centres.", tag: "Touchpoint CX" },
-    ],
-    research: [
-      { icon: "📈", title: "Brand Health Tracker", desc: "Run brand consideration and NPS trackers via WhatsApp at 80% lower cost.", tag: "Tracker" },
-      { icon: "💰", title: "Price Sensitivity Research", desc: "Understand data bundle and plan pricing elasticity across segments.", tag: "Pricing" },
-      { icon: "🌍", title: "Rural Market Research", desc: "Reach prepaid and rural subscribers in local languages where online panels can't.", tag: "Inclusion" },
-      { icon: "⚡", title: "5G / New Service Concept Test", desc: "Test interest and willingness to pay for new services before capital investment.", tag: "Innovation" },
-    ],
-  },
-  "Retail / E-commerce": {
-    feedback: [
-      { icon: "🛒", title: "Post-Purchase Feedback", desc: "WhatsApp surveys triggered after purchase to track satisfaction, delivery experience, and product quality.", tag: "CX · Delivery" },
-      { icon: "📦", title: "In-Store QR Feedback", desc: "QR codes at checkout or on receipts linking to WhatsApp for real-time store experience feedback.", tag: "Store CX" },
-      { icon: "🔔", title: "Returns & Complaints Channel", desc: "Always-on WhatsApp channel to capture return reasons and service recovery opportunities early.", tag: "Service Recovery" },
-      { icon: "⭐", title: "Loyalty Program Research", desc: "Understand member satisfaction, redemption behaviour, and program value perception.", tag: "Loyalty" },
-    ],
-    research: [
-      { icon: "📈", title: "Shopper Behaviour Tracker", desc: "Recurring study on shopping habits, channel preference, and basket composition.", tag: "Tracker" },
-      { icon: "🧪", title: "Private Label Testing", desc: "Test new private label products, packaging, and pricing with target shoppers.", tag: "Innovation" },
-      { icon: "🌍", title: "Market Expansion Research", desc: "Understand new market dynamics and consumer needs before store openings.", tag: "Market Entry" },
-      { icon: "⚡", title: "Competitor Price Perception", desc: "Research how consumers perceive your pricing vs. competitors across categories.", tag: "Competitive Intel" },
-    ],
-  },
-};
+/* ─── TYPES ─── */
+interface UseCaseItem { icon: string; title: string; desc: string; tags: string[] }
+interface FlowStep { emoji: string; label: string; desc: string; bg: "navy" | "whatsapp" | "olive" | "gold" | "coral" | "light" }
+interface FlowBranch { label: string; color: "olive" | "gold" | "coral" }
+interface CompetitorCard { name: string; stat: string; desc: string; badge: string }
+interface KpiCard { label: string; value: string; delta: string; positive: boolean }
+interface IssueRow { issue: string; mentions: number; severity: "High" | "Medium" | "Low" }
+interface ChatMsg { from: "bot" | "user"; text: string }
 
-const DEFAULT_TEMPLATE = {
-  feedback: [
-    { icon: "📊", title: "Customer Satisfaction Surveys", desc: "Automated WhatsApp surveys triggered at key touchpoints to track NPS, CSAT, and CES.", tag: "NPS · CSAT" },
-    { icon: "📦", title: "QR-Triggered Feedback", desc: "QR codes at point of experience linking to WhatsApp conversations for real-time feedback.", tag: "QR · Real-Time" },
-    { icon: "🔔", title: "Always-On Feedback", desc: "Persistent WhatsApp channel for early issue detection before problems escalate.", tag: "Early Warning" },
-    { icon: "🧪", title: "Concept Testing", desc: "Rapid consumer pulses to test new products, services, or messaging before launch.", tag: "Innovation" },
-  ],
-  research: [
-    { icon: "📈", title: "Tracker Augmentation", desc: "Run recurring studies via WhatsApp to reduce cost and turnaround vs. traditional methods.", tag: "Trackers" },
-    { icon: "🌍", title: "Market Entry Research", desc: "Reach consumers in new markets in local languages where traditional panels struggle.", tag: "Market Entry" },
-    { icon: "📱", title: "Experience Testing", desc: "Capture product/service experience data at the moment of use via QR or trigger-based flows.", tag: "Testing" },
-    { icon: "⚡", title: "WhatsApp Recruitment", desc: "Faster screening and recruitment via WhatsApp. Cut recruitment time by 80%.", tag: "Recruitment" },
-  ],
-};
-
-interface UseCaseItem {
-  icon: string;
-  title: string;
-  desc: string;
-  tag: string;
+interface GeneratedDeck {
+  intro: { headline: string; subtitle: string };
+  feedbackUseCases: UseCaseItem[];
+  researchUseCases: UseCaseItem[];
+  flowSteps: FlowStep[];
+  flowBranches: FlowBranch[];
+  flowOutputs: { label: string; desc: string; color: string }[];
+  chatMessages: ChatMsg[];
+  competitors: CompetitorCard[];
+  competitorCta: string;
+  kpis: KpiCard[];
+  npsData: number[];
+  sentiment: { positive: number; neutral: number; negative: number };
+  issues: IssueRow[];
+  sampleQuestions: string[];
+  branchName: string;
 }
 
 interface FormState {
@@ -121,22 +58,137 @@ interface FormState {
   brandName: string;
   industry: string;
   context: string;
+  competitors: string;
+  brandColor: string;
 }
 
-interface GeneratedContent {
-  intro: { headline: string; subtitle: string };
-  feedbackUseCases: UseCaseItem[];
-  researchUseCases: UseCaseItem[];
-  flowSteps: { emoji: string; label: string; bg: string }[];
-  chatMessages: { from: string; text: string }[];
-  cta: string;
-  branchName: string;
-}
+/* ─── INDUSTRY TEMPLATES ─── */
+const TEMPLATES: Record<string, {
+  feedback: UseCaseItem[];
+  research: UseCaseItem[];
+  flowTrigger: string;
+  chatMessages: ChatMsg[];
+  kpis: KpiCard[];
+  issues: IssueRow[];
+  sampleQuestions: string[];
+}> = {
+  "Financial Services / Banking": {
+    feedback: [
+      { icon: "🏦", title: "Post-Onboarding Check-in", desc: "WhatsApp pulse after sign-up. Track satisfaction, friction, and early churn signals from new customers.", tags: ["Onboarding", "NPS", "Churn"] },
+      { icon: "🏪", title: "Branch Experience Survey", desc: "Survey triggered after in-branch visits. Measure wait time satisfaction and staff experience.", tags: ["Branch", "CSAT", "Ops"] },
+      { icon: "📱", title: "App & Digital Experience", desc: "Proactive check-in after digital transactions. Surface UX issues before they hit app store reviews.", tags: ["Digital", "UX", "Retention"] },
+      { icon: "🚪", title: "Competitor Switch Intercept", desc: "AI depth-probe when a customer signals intent to leave. Understand what competitors offer.", tags: ["Churn", "Win-back", "Intel"] },
+    ],
+    research: [
+      { icon: "💳", title: "Product Concept Testing", desc: "Test new product concepts with segmented panels before launch. Validate pricing, messaging, features.", tags: ["Product", "Concept", "Validation"] },
+      { icon: "🏬", title: "Partner Channel Experience", desc: "Survey customers after interactions at retail partners. Optimise experiences driving adoption.", tags: ["Partners", "Retail", "Ops"] },
+      { icon: "📈", title: "Brand Perception Tracker", desc: "Quarterly brand health pulse across demographics. Track awareness, trust, and consideration vs competitors.", tags: ["Brand", "Tracking", "Quarterly"] },
+      { icon: "🎯", title: "Segment Deep-Dives", desc: "AI-moderated interviews with specific segments. Rich qualitative insights without traditional focus group costs.", tags: ["Qualitative", "Segments", "AI"] },
+    ],
+    flowTrigger: "Customer signs up, visits branch, or completes first transaction",
+    chatMessages: [
+      { from: "bot", text: "Hi! 👋 Thanks for joining us 5 days ago. How's it going so far?" },
+      { from: "user", text: "Pretty good, but the app is a bit slow" },
+      { from: "bot", text: "Thanks for sharing that. On a scale of 0-10, how likely are you to recommend us?" },
+      { from: "user", text: "7" },
+      { from: "bot", text: "Great — what's one thing we could do better?" },
+      { from: "user", text: "Fix the scheduled payments feature" },
+    ],
+    kpis: [
+      { label: "Response Rate", value: "32%", delta: "+8% vs email", positive: true },
+      { label: "NPS Score", value: "47", delta: "+12 vs Q4", positive: true },
+      { label: "Avg. Response Time", value: "1.4 hrs", delta: "from 3–5 days", positive: true },
+      { label: "Active Surveys", value: "3", delta: "247 responses today", positive: true },
+    ],
+    issues: [
+      { issue: "App loading speed", mentions: 89, severity: "High" },
+      { issue: "Branch wait time", mentions: 64, severity: "Medium" },
+      { issue: "Fee transparency", mentions: 41, severity: "Medium" },
+      { issue: "Scheduled payments missing", mentions: 37, severity: "High" },
+    ],
+    sampleQuestions: ["How easy was it to sign up?", "Would you recommend us?", "What would you improve about the app?", "How was your branch experience?"],
+  },
+  "FMCG / Consumer Goods": {
+    feedback: [
+      { icon: "📊", title: "Post-Purchase Surveys", desc: "WhatsApp surveys triggered after purchase to track satisfaction, NPS, and churn drivers at scale.", tags: ["NPS", "Churn", "Scale"] },
+      { icon: "📦", title: "In-Store & On-Pack QR", desc: "QR codes on packaging linking to WhatsApp conversations for real-time product feedback.", tags: ["Retail", "QR", "Real-Time"] },
+      { icon: "🔔", title: "Always-On Feedback Channel", desc: "Persistent WhatsApp channel to surface product issues early — defects, quality, stock-outs.", tags: ["Early Warning", "QA"] },
+      { icon: "🧪", title: "Pre-Launch Concept Testing", desc: "Targeted pulses to test consumer reactions to new products, packaging, or messaging.", tags: ["Innovation", "Testing"] },
+    ],
+    research: [
+      { icon: "📈", title: "Tracker Augmentation", desc: "Run parts of brand trackers via WhatsApp to dramatically reduce cost and turnaround.", tags: ["Trackers", "Cost Savings"] },
+      { icon: "🌍", title: "New Market Studies", desc: "Research consumer behaviour in new markets in local languages where panels struggle.", tags: ["Market Entry", "Multilingual"] },
+      { icon: "📱", title: "Product Testing via QR", desc: "QR follow-ups after trial or delivery. Capture experience at the moment of use.", tags: ["Product Testing", "QR"] },
+      { icon: "⚡", title: "WhatsApp Screeners", desc: "Faster incidence and recruitment via WhatsApp screeners. Cut recruitment time by 80%.", tags: ["Recruitment", "Speed"] },
+    ],
+    flowTrigger: "Customer purchases product, scans QR on packaging, or visits store",
+    chatMessages: [
+      { from: "bot", text: "Hey! 👋 Thanks for trying our product. We'd love your feedback — takes 2 mins." },
+      { from: "user", text: "Sure, happy to help" },
+      { from: "bot", text: "How would you rate the overall quality? (1-10)" },
+      { from: "user", text: "8 - really liked the flavour but packaging was hard to open" },
+      { from: "bot", text: "Great score! Tell me more about the packaging issue — what made it difficult?" },
+      { from: "user", text: "The seal was too tight, had to use scissors" },
+    ],
+    kpis: [
+      { label: "Response Rate", value: "45%", delta: "+22% vs email", positive: true },
+      { label: "NPS Score", value: "52", delta: "+8 vs last quarter", positive: true },
+      { label: "Avg. Response Time", value: "47 min", delta: "from 3–5 days", positive: true },
+      { label: "Active Studies", value: "4", delta: "1,203 responses today", positive: true },
+    ],
+    issues: [
+      { issue: "Packaging difficulty", mentions: 112, severity: "High" },
+      { issue: "Stock availability", mentions: 78, severity: "Medium" },
+      { issue: "Flavour inconsistency", mentions: 54, severity: "Medium" },
+      { issue: "Price perception", mentions: 43, severity: "High" },
+    ],
+    sampleQuestions: ["How did you find the product quality?", "Where did you purchase it?", "Would you buy it again?", "How does it compare to alternatives?"],
+  },
+  "Telecommunications": {
+    feedback: [
+      { icon: "📶", title: "Network Experience Feedback", desc: "WhatsApp surveys triggered by network events — outages, plan changes, roaming — for real-time CX.", tags: ["Network", "CX", "Events"] },
+      { icon: "📱", title: "App & USSD Satisfaction", desc: "In-moment feedback on self-service digital channels and app feature usage.", tags: ["Digital", "CX", "App"] },
+      { icon: "🔔", title: "Churn Early Warning", desc: "Detect dissatisfaction signals early via always-on WhatsApp to trigger save-desk interventions.", tags: ["Churn", "Prevention", "Save"] },
+      { icon: "🏪", title: "Retail & Call Centre Audit", desc: "Post-interaction feedback across retail stores and contact centres.", tags: ["Touchpoint", "CX", "Ops"] },
+    ],
+    research: [
+      { icon: "📈", title: "Brand Health Tracker", desc: "Run brand consideration and NPS trackers via WhatsApp at 80% lower cost.", tags: ["Tracker", "Brand", "NPS"] },
+      { icon: "💰", title: "Price Sensitivity Research", desc: "Understand data bundle and plan pricing elasticity across segments.", tags: ["Pricing", "Segments"] },
+      { icon: "🌍", title: "Rural Market Research", desc: "Reach prepaid and rural subscribers in local languages where online panels can't.", tags: ["Rural", "Inclusion", "Multilingual"] },
+      { icon: "⚡", title: "New Service Concept Test", desc: "Test interest and willingness to pay for new services before capital investment.", tags: ["Innovation", "5G", "Testing"] },
+    ],
+    flowTrigger: "Customer activates SIM, recharges, or contacts support",
+    chatMessages: [
+      { from: "bot", text: "Hi! 👋 We noticed you recently changed your data plan. How's it working for you?" },
+      { from: "user", text: "The speed is fine but I keep running out of data" },
+      { from: "bot", text: "Got it. On a scale of 0-10, how satisfied are you with your current plan value?" },
+      { from: "user", text: "5 - it's expensive for what you get" },
+      { from: "bot", text: "Thanks for being honest. What would make your plan feel worth it?" },
+      { from: "user", text: "Rollover data and cheaper night-time rates" },
+    ],
+    kpis: [
+      { label: "Response Rate", value: "38%", delta: "+15% vs USSD", positive: true },
+      { label: "NPS Score", value: "34", delta: "+6 vs Q3", positive: true },
+      { label: "Avg. Response Time", value: "52 min", delta: "from 4 days", positive: true },
+      { label: "Active Surveys", value: "5", delta: "892 responses today", positive: true },
+    ],
+    issues: [
+      { issue: "Data running out too fast", mentions: 156, severity: "High" },
+      { issue: "Network coverage gaps", mentions: 98, severity: "High" },
+      { issue: "Billing confusion", mentions: 67, severity: "Medium" },
+      { issue: "Call centre wait times", mentions: 45, severity: "Medium" },
+    ],
+    sampleQuestions: ["How's your network experience?", "Is your plan good value?", "What would improve your experience?", "How was your last store visit?"],
+  },
+};
+
+const DEFAULT_TEMPLATE = TEMPLATES["FMCG / Consumer Goods"]!;
 
 function getTemplate(industry: string) {
-  return USE_CASE_TEMPLATES[industry] || DEFAULT_TEMPLATE;
+  return TEMPLATES[industry] || DEFAULT_TEMPLATE;
 }
 
+/* ─── PREVIEW CARD ─── */
 function PreviewCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-xl border border-border overflow-hidden">
@@ -149,6 +201,19 @@ function PreviewCard({ title, icon, children }: { title: string; icon: React.Rea
   );
 }
 
+/* ─── TAG COMPONENT ─── */
+function Tag({ label, color }: { label: string; color?: string }) {
+  return (
+    <span
+      className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mr-1 mb-1"
+      style={{ backgroundColor: color || "hsl(86, 18%, 90%)", color: color ? "white" : "hsl(86, 18%, 43%)" }}
+    >
+      {label}
+    </span>
+  );
+}
+
+/* ─── MAIN COMPONENT ─── */
 const Admin = () => {
   const [step, setStep] = useState(0);
   const [generating, setGenerating] = useState(false);
@@ -160,9 +225,11 @@ const Admin = () => {
     brandName: "",
     industry: "",
     context: "",
+    competitors: "",
+    brandColor: "#1A6B3C",
   });
 
-  const [generated, setGenerated] = useState<GeneratedContent | null>(null);
+  const [generated, setGenerated] = useState<GeneratedDeck | null>(null);
 
   const updateForm = (key: keyof FormState, val: string) => setForm((prev) => ({ ...prev, [key]: val }));
 
@@ -177,42 +244,70 @@ const Admin = () => {
 
   const handleGenerate = async () => {
     setGenerating(true);
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2500));
 
     const template = getTemplate(form.industry);
+    const brand = form.brandName || form.companyName;
+
+    // Generate competitor cards (from input or defaults)
+    let competitors: CompetitorCard[];
+    if (form.competitors.trim()) {
+      competitors = form.competitors.split(",").map((c) => c.trim()).filter(Boolean).slice(0, 3).map((name) => ({
+        name,
+        stat: "Major competitor",
+        desc: `Actively investing in CX and customer intelligence programmes.`,
+        badge: "Active CX",
+      }));
+    } else {
+      competitors = [
+        { name: "Competitor A", stat: "Market leader", desc: "Running structured CX surveys across digital touchpoints.", badge: "Active CX programme" },
+        { name: "Competitor B", stat: "Fast-growing", desc: "AI-powered voice-of-customer analysis for real-time insights.", badge: "AI-driven insights" },
+        { name: "Competitor C", stat: "Innovative", desc: "Behavioural data and feedback loops powering personalised experiences.", badge: "Behavioural CX" },
+      ];
+    }
+
+    // Customise chat messages with brand name
+    const chatMessages = template.chatMessages.map((msg) => ({
+      ...msg,
+      text: msg.text.replace(/joining us/g, `joining ${brand}`).replace(/our product/g, `${brand}`),
+    }));
 
     setGenerated({
       intro: {
-        headline: `AI-Powered Consumer Research for ${form.brandName || form.companyName}`,
-        subtitle: "Understand your consumers through WhatsApp conversations at scale",
+        headline: `Real-Time Customer Intelligence for ${brand}`,
+        subtitle: `Understand your customers through WhatsApp conversations — from onboarding to advocacy, at scale`,
       },
       feedbackUseCases: template.feedback,
       researchUseCases: template.research,
       flowSteps: [
-        { emoji: "📦", label: "Purchase Event or QR Scan", bg: "navy" },
-        { emoji: "💬", label: "WhatsApp Conversation Opens", bg: "whatsapp" },
-        { emoji: "🤖", label: "AI Adaptive Interview (3–5 Qs)", bg: "light" },
-        { emoji: "🔀", label: "Satisfied → NPS / Issue → Deep Probe", bg: "light" },
-        { emoji: "📊", label: "Dashboard + Real-Time Alert", bg: "olive" },
+        { emoji: "⚡", label: "Trigger Event", desc: template.flowTrigger, bg: "coral" },
+        { emoji: "💬", label: "WhatsApp Conversation", desc: "Yazi AI engages customer in natural, adaptive dialogue", bg: "whatsapp" },
       ],
-      chatMessages: [
-        { from: "bot", text: `Hey! 👋 Thanks for your recent experience with ${form.brandName || form.companyName}. We'd love to hear your feedback — takes just 2 mins.` },
-        { from: "bot", text: "Q1 of 4 📋\nHow would you rate your overall experience?" },
-        { from: "user", text: "Pretty good overall, but there were a few things that could be better" },
-        { from: "bot", text: "Thanks for sharing! You mentioned some things could be better — what specifically stood out?" },
+      flowBranches: [
+        { label: "Quick Pulse", color: "olive" },
+        { label: "AI Depth Probe", color: "gold" },
+        { label: "Save Attempt", color: "coral" },
       ],
-      cta: `See how Yazi can transform consumer research for ${form.companyName}. Book a demo in seconds.`,
-      branchName: (form.brandName || form.companyName)
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "-")
-        .replace(/-+/g, "-"),
+      flowOutputs: [
+        { label: "Live Dashboard", desc: "Real-time KPIs, trends & segment views", color: "hsl(211, 75%, 35%)" },
+        { label: "Retention Alert", desc: "Instant alerts on at-risk customers", color: "hsl(14, 83%, 54%)" },
+      ],
+      chatMessages,
+      competitors,
+      competitorCta: `With Yazi, ${brand} can leapfrog competitors — launching real-time CX intelligence on WhatsApp, the channel your customers already live on.`,
+      kpis: template.kpis,
+      npsData: [32, 35, 38, 41, 39, 44, 47],
+      sentiment: { positive: 62, neutral: 24, negative: 14 },
+      issues: template.issues,
+      sampleQuestions: template.sampleQuestions,
+      branchName: brand.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""),
     });
 
     setGenerating(false);
     setStep(2);
   };
 
-  const handleDeploy = () => setStep(3);
+  const handleExport = () => setStep(3);
 
   return (
     <div className="min-h-screen bg-background" style={{ fontFamily: "'DM Sans', sans-serif" }}>
@@ -232,13 +327,9 @@ const Admin = () => {
               <div key={s} className="flex items-center gap-2">
                 <div
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    i === step
-                      ? "bg-foreground text-background"
-                      : i < step
-                      ? "text-foreground/60"
-                      : "bg-muted/30 text-muted-foreground"
+                    i === step ? "bg-foreground text-background" : i < step ? "text-foreground/60" : "bg-muted/30 text-muted-foreground"
                   }`}
-                  style={{ backgroundColor: i < step ? "hsl(86, 18%, 90%)" : undefined, color: i < step ? "hsl(86, 18%, 43%)" : undefined }}
+                  style={i < step ? { backgroundColor: "hsl(86, 18%, 90%)", color: "hsl(86, 18%, 43%)" } : undefined}
                 >
                   {i < step ? <Check className="w-3 h-3" /> : null}
                   {s}
@@ -251,14 +342,12 @@ const Admin = () => {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-10">
-        {/* STEP 0: Input Form */}
+        {/* ── STEP 0: INPUT FORM ── */}
         {step === 0 && (
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-10">
-              <h1 className="text-4xl mb-3">
-                Create a <em>Personalized</em> Deck
-              </h1>
-              <p className="text-muted-foreground text-base">Enter the prospect's details and we'll generate a tailored Yazi proposal deck.</p>
+              <h1 className="text-4xl mb-3">Create a <em>Personalized</em> Deck</h1>
+              <p className="text-muted-foreground text-base">Enter the prospect's details and we'll generate 5–6 tailored proposal slides.</p>
             </div>
 
             <div className="space-y-6">
@@ -266,53 +355,38 @@ const Admin = () => {
                 <label className="block text-sm font-medium mb-2">Company Name *</label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={form.companyName}
-                    onChange={(e) => updateForm("companyName", e.target.value)}
-                    placeholder="e.g. British American Tobacco"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent text-sm"
-                  />
+                  <input type="text" value={form.companyName} onChange={(e) => updateForm("companyName", e.target.value)} placeholder="e.g. Old Mutual Bank" className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm" />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-2">Brand / Short Name</label>
-                <input
-                  type="text"
-                  value={form.brandName}
-                  onChange={(e) => updateForm("brandName", e.target.value)}
-                  placeholder="e.g. BAT (used in headlines)"
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent text-sm"
-                />
+                <input type="text" value={form.brandName} onChange={(e) => updateForm("brandName", e.target.value)} placeholder="e.g. OM Bank (used in headlines)" className="w-full px-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm" />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Industry *</label>
-                <div className="relative">
-                  <select
-                    value={form.industry}
-                    onChange={(e) => updateForm("industry", e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent text-sm appearance-none cursor-pointer"
-                  >
-                    <option value="">Select an industry...</option>
-                    {INDUSTRIES.map((ind) => (
-                      <option key={ind} value={ind}>
-                        {ind}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Industry *</label>
+                  <div className="relative">
+                    <select value={form.industry} onChange={(e) => updateForm("industry", e.target.value)} className="w-full px-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm appearance-none">
+                      <option value="">Select...</option>
+                      {INDUSTRIES.map((ind) => <option key={ind} value={ind}>{ind}</option>)}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Brand Color</label>
+                  <div className="flex gap-2">
+                    <input type="color" value={form.brandColor} onChange={(e) => updateForm("brandColor", e.target.value)} className="w-12 h-11 rounded-lg border border-border cursor-pointer" />
+                    <input type="text" value={form.brandColor} onChange={(e) => updateForm("brandColor", e.target.value)} placeholder="#1A6B3C" className="flex-1 px-4 py-3 rounded-xl border border-border bg-white text-sm" />
+                  </div>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-2">Company Logo</label>
-                <div
-                  onClick={() => fileRef.current?.click()}
-                  className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/40 transition-all"
-                  style={{ backgroundColor: logoPreview ? undefined : "rgba(0,0,0,0.01)" }}
-                >
+                <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-primary/40 transition-all">
                   {logoPreview ? (
                     <div className="flex items-center justify-center gap-4">
                       <img src={logoPreview} alt="Logo" className="max-h-12 max-w-[160px] object-contain" />
@@ -329,160 +403,142 @@ const Admin = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Context / Meeting Notes</label>
-                <textarea
-                  value={form.context}
-                  onChange={(e) => updateForm("context", e.target.value)}
-                  placeholder="Paste any meeting notes, specific use cases they mentioned, or details about what they're looking for..."
-                  rows={5}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent text-sm resize-none"
-                />
-                <p className="text-xs text-muted-foreground mt-1.5">Optional — if left empty, we'll research the company and suggest use cases.</p>
+                <label className="block text-sm font-medium mb-2">Competitors <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <input type="text" value={form.competitors} onChange={(e) => updateForm("competitors", e.target.value)} placeholder="e.g. Capitec, TymeBank, Discovery Bank (comma-separated)" className="w-full px-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm" />
+                <p className="text-xs text-muted-foreground mt-1">Leave empty and we'll research competitors for you.</p>
               </div>
 
-              <button
-                onClick={() => {
-                  setStep(1);
-                  handleGenerate();
-                }}
-                disabled={!form.companyName || !form.industry}
-                className="w-full py-4 rounded-xl bg-foreground text-background font-semibold text-sm flex items-center justify-center gap-2 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-              >
+              <div>
+                <label className="block text-sm font-medium mb-2">Context / Meeting Notes <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <textarea value={form.context} onChange={(e) => updateForm("context", e.target.value)} placeholder="Paste meeting notes, specific pain points, KPIs they care about, key contacts..." rows={5} className="w-full px-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm resize-none" />
+              </div>
+
+              <button onClick={() => { setStep(1); handleGenerate(); }} disabled={!form.companyName || !form.industry} className="w-full py-4 rounded-xl bg-foreground text-background font-semibold text-sm flex items-center justify-center gap-2 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90">
                 <Sparkles className="w-4 h-4" />
-                Generate Personalized Deck
+                Generate Proposal Slides
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 1: Generating */}
+        {/* ── STEP 1: GENERATING ── */}
         {step === 1 && (
           <div className="flex flex-col items-center justify-center py-32">
             <Loader2 className="w-10 h-10 animate-spin mb-6" style={{ color: "hsl(86, 18%, 43%)" }} />
-            <h2 className="text-2xl mb-2">
-              Generating deck for <em>{form.brandName || form.companyName}</em>
-            </h2>
-            <p className="text-muted-foreground text-sm">Researching the company and creating tailored use cases...</p>
+            <h2 className="text-2xl mb-2">Generating slides for <em>{form.brandName || form.companyName}</em></h2>
+            <p className="text-muted-foreground text-sm">Researching the company, building use cases, and creating dashboard mockups...</p>
           </div>
         )}
 
-        {/* STEP 2: Preview */}
+        {/* ── STEP 2: PREVIEW ── */}
         {step === 2 && generated && (
           <div>
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl">
-                  Preview: <em>{form.brandName || form.companyName}</em>
-                </h2>
-                <p className="text-muted-foreground text-sm mt-1">Review the personalized content before deploying.</p>
+                <h2 className="text-3xl">Preview: <em>{form.brandName || form.companyName}</em></h2>
+                <p className="text-muted-foreground text-sm mt-1">5 tailored slides to append after your main deck.</p>
               </div>
               <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setStep(0);
-                    setGenerated(null);
-                  }}
-                  className="px-5 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-white transition-colors"
-                >
-                  Edit Inputs
-                </button>
-                <button
-                  onClick={handleDeploy}
-                  className="px-5 py-2.5 rounded-xl text-white text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: "hsl(86, 18%, 43%)" }}
-                >
-                  <GitBranch className="w-4 h-4" />
-                  Deploy to Vercel
+                <button onClick={() => { setStep(0); setGenerated(null); }} className="px-5 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-white transition-colors">Edit Inputs</button>
+                <button onClick={handleExport} className="px-5 py-2.5 rounded-xl text-white text-sm font-medium flex items-center gap-2 hover:opacity-90" style={{ backgroundColor: "hsl(86, 18%, 43%)" }}>
+                  <Download className="w-4 h-4" />
+                  Export Deck
                 </button>
               </div>
             </div>
 
             <div className="space-y-6">
-              <PreviewCard title="Slide 1 — Introduction" icon={<FileText className="w-4 h-4" />}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center">
-                    <svg width="16" height="16" viewBox="0 0 48 48" fill="none">
-                      <path d="M18 16l6 8-6 8M24 16l6 8-6 8" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+              {/* SLIDE 1: Co-branded Intro */}
+              <PreviewCard title="Slide 1 — Co-branded Introduction" icon={<FileText className="w-4 h-4" />}>
+                <div className="text-center py-6" style={{ backgroundColor: "hsl(37, 100%, 97%)", borderRadius: "12px" }}>
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center">
+                      <svg width="16" height="16" viewBox="0 0 48 48" fill="none"><path d="M18 16l6 8-6 8M24 16l6 8-6 8" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </div>
+                    <span className="text-xl text-muted-foreground/40">×</span>
+                    {logoPreview ? <img src={logoPreview} alt="" className="max-h-10 max-w-[120px] object-contain" /> : (
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: form.brandColor }}>{(form.brandName || form.companyName).charAt(0)}</div>
+                    )}
                   </div>
-                  <span className="text-xl text-muted-foreground/40 font-light">×</span>
-                  {logoPreview ? (
-                    <img src={logoPreview} alt="Logo" className="max-h-8 max-w-[100px] object-contain" />
-                  ) : (
-                    <span className="text-lg font-bold text-foreground">{form.brandName || form.companyName}</span>
-                  )}
-                </div>
-                <h3 className="text-2xl mb-2">{generated.intro.headline}</h3>
-                <p className="text-sm text-muted-foreground">{generated.intro.subtitle}</p>
-              </PreviewCard>
-
-              <PreviewCard title="Slide 3 — Customer Feedback Use Cases" icon={<MessageSquare className="w-4 h-4" />}>
-                <div className="grid grid-cols-2 gap-3">
-                  {generated.feedbackUseCases.map((uc, i) => (
-                    <div key={i} className="bg-background rounded-lg p-4 border border-border">
-                      <span className="text-lg mb-2 block">{uc.icon}</span>
-                      <p className="text-sm font-semibold mb-1">{uc.title}</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{uc.desc}</p>
-                      <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ backgroundColor: "hsl(86, 18%, 90%)", color: "hsl(86, 18%, 43%)" }}>
-                        {uc.tag}
-                      </span>
-                    </div>
-                  ))}
+                  <h3 className="text-2xl mb-2">{generated.intro.headline}</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">{generated.intro.subtitle}</p>
                 </div>
               </PreviewCard>
 
-              <PreviewCard title="Slide 4 — Research Use Cases" icon={<BarChart3 className="w-4 h-4" />}>
-                <div className="grid grid-cols-2 gap-3">
-                  {generated.researchUseCases.map((uc, i) => (
-                    <div key={i} className="bg-background rounded-lg p-4 border border-border">
-                      <span className="text-lg mb-2 block">{uc.icon}</span>
-                      <p className="text-sm font-semibold mb-1">{uc.title}</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{uc.desc}</p>
-                      <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ backgroundColor: "hsl(86, 18%, 90%)", color: "hsl(86, 18%, 43%)" }}>
-                        {uc.tag}
-                      </span>
-                    </div>
-                  ))}
+              {/* SLIDE 2: Use Cases */}
+              <PreviewCard title="Slide 2 — Use Cases" icon={<MessageSquare className="w-4 h-4" />}>
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "hsl(86, 18%, 43%)" }} />
+                    <span className="text-sm font-semibold">Customer Feedback — CX & Brand Perception</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {generated.feedbackUseCases.map((uc, i) => (
+                      <div key={i} className="bg-background rounded-lg p-3 border border-border">
+                        <span className="text-base mb-1 block">{uc.icon}</span>
+                        <p className="text-xs font-semibold mb-1">{uc.title}</p>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed mb-2">{uc.desc}</p>
+                        <div>{uc.tags.map((t) => <Tag key={t} label={t} />)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "hsl(35, 88%, 59%)" }} />
+                    <span className="text-sm font-semibold">Market Research</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {generated.researchUseCases.map((uc, i) => (
+                      <div key={i} className="bg-background rounded-lg p-3 border border-border">
+                        <span className="text-base mb-1 block">{uc.icon}</span>
+                        <p className="text-xs font-semibold mb-1">{uc.title}</p>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed mb-2">{uc.desc}</p>
+                        <div>{uc.tags.map((t) => <Tag key={t} label={t} />)}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </PreviewCard>
 
-              <PreviewCard title="Slide 5 — How It Works" icon={<Zap className="w-4 h-4" />}>
+              {/* SLIDE 3: How It Works */}
+              <PreviewCard title="Slide 3 — How It Works" icon={<Zap className="w-4 h-4" />}>
                 <div className="flex gap-8">
                   <div className="flex-1">
-                    <div className="flex flex-col gap-0">
-                      {generated.flowSteps.map((s, i) => (
-                        <div key={i} className="flex flex-col items-start">
-                          <div
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium ${
-                              s.bg === "navy"
-                                ? "bg-foreground text-background"
-                                : s.bg === "whatsapp"
-                                ? "text-white"
-                                : s.bg === "olive"
-                                ? "text-white"
-                                : "bg-muted/40 text-foreground"
-                            }`}
-                            style={{
-                              backgroundColor: s.bg === "whatsapp" ? "#075E54" : s.bg === "olive" ? "hsl(86, 18%, 43%)" : undefined,
-                            }}
-                          >
-                            <span>{s.emoji}</span> {s.label}
-                          </div>
-                          {i < generated.flowSteps.length - 1 && <div className="ml-5 w-0.5 h-4 bg-border" />}
+                    {/* Flow steps */}
+                    {generated.flowSteps.map((s, i) => (
+                      <div key={i} className="mb-1">
+                        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white`} style={{ backgroundColor: s.bg === "coral" ? "hsl(14, 83%, 54%)" : "#075E54" }}>
+                          <span>{s.emoji}</span> <strong>{s.label}</strong>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground ml-8 mt-0.5 mb-1">{s.desc}</p>
+                        <div className="ml-5 w-0.5 h-3 bg-border" />
+                      </div>
+                    ))}
+                    {/* Branches */}
+                    <div className="flex gap-2 ml-4 mb-1">
+                      {generated.flowBranches.map((b) => (
+                        <span key={b.label} className="px-2.5 py-1 rounded-full text-[10px] font-semibold text-white" style={{ backgroundColor: b.color === "olive" ? "hsl(86,18%,43%)" : b.color === "gold" ? "hsl(35,88%,59%)" : "hsl(14,83%,54%)" }}>{b.label}</span>
+                      ))}
+                    </div>
+                    <div className="ml-5 w-0.5 h-3 bg-border" />
+                    {/* Outputs */}
+                    <div className="flex gap-2 ml-4">
+                      {generated.flowOutputs.map((o) => (
+                        <div key={o.label} className="px-3 py-2 rounded-lg text-[10px] font-medium text-white" style={{ backgroundColor: o.color }}>
+                          <strong>{o.label}</strong><br /><span className="opacity-80">{o.desc}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="rounded-xl p-3 max-w-xs" style={{ backgroundColor: "#ECE5DD" }}>
+                  <div className="flex-1 max-w-xs">
+                    <div className="rounded-xl p-3" style={{ backgroundColor: "#ECE5DD" }}>
                       <div className="text-white text-xs font-semibold px-3 py-2 rounded-t-lg -mt-3 -mx-3 mb-2" style={{ backgroundColor: "#075E54" }}>
                         {form.brandName || form.companyName} Research
                       </div>
                       <div className="space-y-1.5">
                         {generated.chatMessages.map((msg, i) => (
-                          <div key={i} className={`${msg.from === "user" ? "ml-6" : "mr-6"} rounded-lg px-2.5 py-1.5 text-[11px] leading-snug`} style={{ backgroundColor: msg.from === "user" ? "#DCF8C6" : "white" }}>
-                            {msg.text}
-                          </div>
+                          <div key={i} className={`${msg.from === "user" ? "ml-4" : "mr-4"} rounded-lg px-2.5 py-1.5 text-[10px] leading-snug`} style={{ backgroundColor: msg.from === "user" ? "#DCF8C6" : "white" }}>{msg.text}</div>
                         ))}
                       </div>
                     </div>
@@ -490,52 +546,116 @@ const Admin = () => {
                 </div>
               </PreviewCard>
 
-              <PreviewCard title="Slide 14 — Book a Demo" icon={<ExternalLink className="w-4 h-4" />}>
-                <p className="text-sm text-muted-foreground">{generated.cta}</p>
+              {/* SLIDE 4: Competitive Edge */}
+              <PreviewCard title="Slide 4 — Competitive Edge" icon={<Shield className="w-4 h-4" />}>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Your Competitors Are Already Listening</p>
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  {generated.competitors.map((c, i) => (
+                    <div key={i} className="bg-background rounded-lg p-4 border border-border text-center">
+                      <p className="text-sm font-bold mb-1">{c.name}</p>
+                      <p className="text-[11px] text-muted-foreground mb-2">{c.stat}</p>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">{c.desc}</p>
+                      <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold bg-foreground/10 text-foreground">{c.badge}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground italic">{generated.competitorCta}</p>
               </PreviewCard>
 
-              <div className="bg-white/60 rounded-xl border border-border p-5">
-                <p className="text-sm text-muted-foreground">
-                  <strong className="text-foreground">Slides 2, 6–13 remain unchanged:</strong> Conversion Gap, Methodologies, Project Creation, Multilingual, Recruitment, Engagement, Security, Reporting & Analytics, Clients.
-                </p>
-              </div>
+              {/* SLIDE 5: Dashboard Mockup */}
+              <PreviewCard title="Slide 5 — Dashboard Mockup" icon={<BarChart3 className="w-4 h-4" />}>
+                <div className="rounded-xl border border-border overflow-hidden">
+                  {/* Dashboard header */}
+                  <div className="px-4 py-2.5 flex items-center justify-between" style={{ backgroundColor: "hsl(211, 75%, 15%)" }}>
+                    <span className="text-white text-xs font-semibold">{form.brandName || form.companyName} — Customer Intelligence Dashboard</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold text-white" style={{ backgroundColor: "#25D366" }}>Live</span>
+                  </div>
+                  {/* KPI row */}
+                  <div className="grid grid-cols-4 gap-3 p-4 border-b border-border">
+                    {generated.kpis.map((kpi) => (
+                      <div key={kpi.label} className="text-center bg-background rounded-lg p-3 border border-border">
+                        <p className="text-lg font-bold" style={{ fontFamily: "'Instrument Serif', serif" }}>{kpi.value}</p>
+                        <p className="text-[10px] font-medium text-foreground">{kpi.label}</p>
+                        <p className={`text-[10px] ${kpi.positive ? "text-green-600" : "text-red-500"}`}>{kpi.delta}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 p-4">
+                    {/* NPS Trend */}
+                    <div>
+                      <p className="text-[11px] font-semibold mb-2">NPS Trend — Post-Onboarding Survey</p>
+                      <div className="bg-background rounded-lg p-3 border border-border h-24 flex items-end gap-1">
+                        {generated.npsData.map((v, i) => (
+                          <div key={i} className="flex-1 rounded-t" style={{ height: `${(v / 50) * 100}%`, backgroundColor: form.brandColor, opacity: 0.6 + (i * 0.05) }} />
+                        ))}
+                      </div>
+                      <div className="flex justify-between mt-1 text-[9px] text-muted-foreground">
+                        {["W1", "W2", "W3", "W4", "W5", "W6", "W7"].map((w) => <span key={w}>{w}</span>)}
+                      </div>
+                    </div>
+                    {/* Right panel */}
+                    <div className="space-y-3">
+                      {/* Sentiment */}
+                      <div>
+                        <p className="text-[11px] font-semibold mb-2">Sentiment Breakdown — This Week</p>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-[10px]"><span className="w-14 text-right">Positive</span><div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${generated.sentiment.positive}%`, backgroundColor: "hsl(86,18%,43%)" }} /></div><span className="w-8">{generated.sentiment.positive}%</span></div>
+                          <div className="flex items-center gap-2 text-[10px]"><span className="w-14 text-right">Neutral</span><div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${generated.sentiment.neutral}%`, backgroundColor: "hsl(35,88%,59%)" }} /></div><span className="w-8">{generated.sentiment.neutral}%</span></div>
+                          <div className="flex items-center gap-2 text-[10px]"><span className="w-14 text-right">Negative</span><div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${generated.sentiment.negative}%`, backgroundColor: "hsl(14,83%,54%)" }} /></div><span className="w-8">{generated.sentiment.negative}%</span></div>
+                        </div>
+                      </div>
+                      {/* Issues table */}
+                      <div>
+                        <p className="text-[11px] font-semibold mb-1.5">Top Issues — AI-Categorised</p>
+                        <div className="space-y-1">
+                          {generated.issues.map((issue) => (
+                            <div key={issue.issue} className="flex items-center justify-between text-[10px] py-1 border-b border-border last:border-0">
+                              <span>{issue.issue}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">{issue.mentions} mentions</span>
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${issue.severity === "High" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>{issue.severity}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Sample questions */}
+                  <div className="px-4 pb-3 flex gap-2 flex-wrap">
+                    {generated.sampleQuestions.map((q) => (
+                      <span key={q} className="px-2.5 py-1 bg-muted/30 rounded-full text-[10px] text-muted-foreground">{q}</span>
+                    ))}
+                  </div>
+                </div>
+              </PreviewCard>
 
+              {/* Bottom export bar */}
               <div className="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-border -mx-6 px-6 py-4 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">Ready to deploy?</p>
-                  <p className="text-xs text-muted-foreground">
-                    Branch: <code className="bg-muted/30 px-1.5 py-0.5 rounded" style={{ color: "hsl(86, 18%, 43%)" }}>{generated.branchName}</code>
-                  </p>
+                  <p className="text-sm font-medium">Ready to export?</p>
+                  <p className="text-xs text-muted-foreground">5 tailored slides for {form.brandName || form.companyName}</p>
                 </div>
-                <button
-                  onClick={handleDeploy}
-                  className="px-6 py-3 rounded-xl bg-foreground text-background text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
-                >
-                  <GitBranch className="w-4 h-4" />
-                  Create Branch & Deploy
+                <button onClick={handleExport} className="px-6 py-3 rounded-xl bg-foreground text-background text-sm font-semibold flex items-center gap-2 hover:opacity-90">
+                  <Download className="w-4 h-4" />
+                  Export & Deploy
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* STEP 3: Deploy */}
+        {/* ── STEP 3: EXPORT ── */}
         {step === 3 && generated && (
           <div className="max-w-lg mx-auto text-center py-20">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: "hsl(86, 18%, 90%)" }}>
               <Check className="w-8 h-8" style={{ color: "hsl(86, 18%, 43%)" }} />
             </div>
-            <h2 className="text-3xl mb-3">
-              Deck <em>Deployed</em>
-            </h2>
+            <h2 className="text-3xl mb-3">Slides <em>Generated</em></h2>
             <p className="text-muted-foreground text-sm mb-8">
-              The personalized deck for {form.brandName || form.companyName} has been created on branch{" "}
-              <code className="bg-muted/30 px-1.5 py-0.5 rounded" style={{ color: "hsl(86, 18%, 43%)" }}>
-                {generated.branchName}
-              </code>
-              .
+              5 personalized slides for {form.brandName || form.companyName} are ready on branch{" "}
+              <code className="bg-muted/30 px-1.5 py-0.5 rounded" style={{ color: "hsl(86, 18%, 43%)" }}>{generated.branchName}</code>.
             </p>
-
             <div className="bg-white rounded-xl border border-border p-6 text-left space-y-4 mb-8">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Branch</span>
@@ -543,13 +663,7 @@ const Admin = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Live Deck</span>
-                <a
-                  href="https://proposal-deck.vercel.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium flex items-center gap-1 hover:underline"
-                  style={{ color: "hsl(86, 18%, 43%)" }}
-                >
+                <a href="https://proposal-deck.vercel.app" target="_blank" rel="noopener noreferrer" className="text-sm font-medium flex items-center gap-1 hover:underline" style={{ color: "hsl(86, 18%, 43%)" }}>
                   proposal-deck.vercel.app <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -559,36 +673,17 @@ const Admin = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">GitHub</span>
-                <a
-                  href="https://github.com/yazi-accounts/proposal-deck"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium flex items-center gap-1 text-foreground hover:underline"
-                >
+                <a href="https://github.com/yazi-accounts/proposal-deck" target="_blank" rel="noopener noreferrer" className="text-sm font-medium flex items-center gap-1 text-foreground hover:underline">
                   yazi-accounts/proposal-deck <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
             </div>
-
             <div className="flex gap-3 justify-center">
-              <a
-                href="https://proposal-deck.vercel.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3 rounded-xl bg-foreground text-background text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
-              >
+              <a href="https://proposal-deck.vercel.app" target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-xl bg-foreground text-background text-sm font-semibold flex items-center gap-2 hover:opacity-90">
                 <ExternalLink className="w-4 h-4" />
                 View Live Deck
               </a>
-              <button
-                onClick={() => {
-                  setStep(0);
-                  setGenerated(null);
-                  setForm({ companyName: "", brandName: "", industry: "", context: "" });
-                  setLogoPreview(null);
-                }}
-                className="px-6 py-3 rounded-xl border border-border text-sm font-medium hover:bg-white transition-colors"
-              >
+              <button onClick={() => { setStep(0); setGenerated(null); setForm({ companyName: "", brandName: "", industry: "", context: "", competitors: "", brandColor: "#1A6B3C" }); setLogoPreview(null); }} className="px-6 py-3 rounded-xl border border-border text-sm font-medium hover:bg-white transition-colors">
                 Generate Another
               </button>
             </div>
