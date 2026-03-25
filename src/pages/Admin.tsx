@@ -181,6 +181,42 @@ const TEMPLATES: Record<string, {
     ],
     sampleQuestions: ["How's your network experience?", "Is your plan good value?", "What would improve your experience?", "How was your last store visit?"],
   },
+  "Automotive": {
+    feedback: [
+      { icon: "🚗", title: "Post-Enquiry Experience", desc: "WhatsApp survey triggered after a buyer enquires on a listing. Track dealer responsiveness, lead quality, and buyer satisfaction.", tags: ["Buyer CX", "Dealer", "Lead Quality"] },
+      { icon: "⭐", title: "Dealer Rating Follow-Up", desc: "Automated feedback request after a test drive or purchase through the platform. Build trust with verified reviews.", tags: ["Reviews", "Trust", "Ratings"] },
+      { icon: "📱", title: "App & Search Experience", desc: "In-moment feedback on search, filtering, and listing quality. Surface UX issues, crashes, and feature gaps before app store reviews.", tags: ["App CX", "UX", "Search"] },
+      { icon: "🔔", title: "Listing Quality Audit", desc: "Survey sellers after listing creation. Track photo upload friction, pricing tool satisfaction, and listing completion rates.", tags: ["Seller CX", "Listings", "Quality"] },
+    ],
+    research: [
+      { icon: "📈", title: "Buyer Journey Tracker", desc: "Quarterly study tracking how buyers research, compare, and decide — from first search to dealer visit to purchase.", tags: ["Journey", "Tracking", "Quarterly"] },
+      { icon: "💰", title: "Pricing & Affordability Study", desc: "Understand price sensitivity, financing preferences, and how buyers perceive value across vehicle segments.", tags: ["Pricing", "Finance", "Segments"] },
+      { icon: "🔄", title: "Seller Experience Research", desc: "AI-moderated depth interviews with private sellers and dealers on what drives listing decisions and platform choice.", tags: ["Sellers", "Dealers", "AI Interview"] },
+      { icon: "🌍", title: "Market Expansion Insights", desc: "Research buyer behaviour in new vehicle categories (EVs, bakkies, bikes) or underserved markets.", tags: ["Market Entry", "EV", "Segments"] },
+    ],
+    flowTrigger: "Buyer enquires on a listing, books a test drive, or completes a purchase",
+    chatMessages: [
+      { from: "bot", text: "Hi! 👋 You recently enquired about a 2022 VW Polo on AutoTrader. How was your experience with the dealer?" },
+      { from: "user", text: "They took 2 days to respond, which was frustrating" },
+      { from: "bot", text: "Sorry to hear that. On a scale of 0-10, how would you rate the overall enquiry experience?" },
+      { from: "user", text: "4 - the listing was great but the dealer let it down" },
+      { from: "bot", text: "Thanks for being honest. What would have made this experience better?" },
+      { from: "user", text: "Faster response and the ability to book a test drive directly through the app" },
+    ],
+    kpis: [
+      { label: "Response Rate", value: "41%", delta: "+18% vs email", positive: true },
+      { label: "NPS Score", value: "38", delta: "+9 vs Q3", positive: true },
+      { label: "Avg. Response Time", value: "35 min", delta: "from 3 days", positive: true },
+      { label: "Active Surveys", value: "4", delta: "312 responses today", positive: true },
+    ],
+    issues: [
+      { issue: "Dealer response time", mentions: 134, severity: "High" },
+      { issue: "App crashes during search", mentions: 87, severity: "High" },
+      { issue: "Outdated/sold listings", mentions: 72, severity: "Medium" },
+      { issue: "Financing clarity", mentions: 48, severity: "Medium" },
+    ],
+    sampleQuestions: ["How was the dealer response?", "Was the listing accurate?", "Would you use AutoTrader again?", "How easy was the search experience?"],
+  },
 };
 
 const DEFAULT_TEMPLATE = TEMPLATES["FMCG / Consumer Goods"]!;
@@ -251,19 +287,52 @@ const Admin = () => {
     const brand = form.brandName || form.companyName;
 
     // Generate competitor cards (from input or defaults)
+    // Industry-specific default competitors
+    const INDUSTRY_COMPETITORS: Record<string, CompetitorCard[]> = {
+      "Financial Services / Banking": [
+        { name: "Capitec", stat: "24.1M active clients", desc: "Dominant mass-market bank with best-rated app in SA. Heavily invests in CX research and digital optimisation.", doing: "In-app feedback loops, dedicated CX research team, continuous NPS tracking, behavioural analytics", badge: "Active CX programme" },
+        { name: "TymeBank / GoTyme", stat: "10.7M clients across SA & Philippines", desc: "Fastest growing neobank. Kiosk-first model with Pick n Pay drives massive reach into underserved segments.", doing: "Automated onboarding feedback, retail partner surveys, WhatsApp support, kiosk experience tracking", badge: "AI-driven insights" },
+        { name: "Discovery Bank", stat: "Vitality-integrated banking", desc: "Behavioural banking pioneer. Vitality-linked rewards create sticky retention loops with deep data analytics.", doing: "Advanced behavioural analytics, personalised CX journeys, real-time engagement scoring, reward-linked NPS", badge: "Behavioural CX" },
+      ],
+      "Automotive": [
+        { name: "Cars.co.za", stat: "5.1M monthly visits", desc: "SA's leading motoring media + marketplace. Combines thousands of listings with editorial reviews, video content, and motoring news.", doing: "Post-purchase dealer surveys, editorial-driven buyer engagement, comprehensive vehicle reviews, Car of the Year awards", badge: "Content + marketplace" },
+        { name: "WeBuyCars", stat: "SA's #1 car buying service", desc: "Instant vehicle purchasing model with on-site evaluations and immediate cash payments. Disrupting private selling.", doing: "Streamlined seller experience tracking, instant valuation feedback, purchase journey optimisation, NPS at point of sale", badge: "Transactional CX" },
+        { name: "Facebook Marketplace", stat: "Massive organic reach", desc: "Growing C2C vehicle marketplace with no listing fees. Increasing threat to classified platforms with social trust signals.", doing: "Social proof via profiles, instant messaging engagement, organic reach algorithms, community-driven trust", badge: "Social commerce" },
+      ],
+      "FMCG / Consumer Goods": [
+        { name: "Nielsen", stat: "Global market research leader", desc: "Comprehensive retail measurement and consumer intelligence across FMCG categories. Gold standard for market sizing.", doing: "Retail panel tracking, shopper insights, brand health trackers, media measurement, syndicated studies", badge: "Full-service research" },
+        { name: "Kantar", stat: "World's largest insights company", desc: "End-to-end brand and CX measurement. Strong in brand equity tracking and advertising effectiveness.", doing: "BrandZ tracking, Worldpanel shopper data, creative testing, social intelligence, sustainability measurement", badge: "Brand intelligence" },
+        { name: "Ipsos", stat: "3rd largest research globally", desc: "Already a Yazi client. Deep expertise in innovation testing, UX research, and customer experience measurement.", doing: "Innovation testing, UX labs, mystery shopping, CX programmes, political and social research", badge: "Innovation + CX" },
+      ],
+      "Telecommunications": [
+        { name: "MTN", stat: "280M+ subscribers across Africa", desc: "Africa's largest telco by subscribers. Massive investment in digital services and mobile money (MoMo).", doing: "In-app satisfaction surveys, USSD feedback, churn prediction models, network quality monitoring", badge: "Scale + digital" },
+        { name: "Telkom", stat: "SA's converged operator", desc: "Fixed + mobile convergence play. Aggressive pricing and fibre rollout creating competitive pressure.", doing: "Converged experience tracking, fibre installation feedback, call centre quality monitoring", badge: "Converged CX" },
+        { name: "Rain", stat: "Data-only disruptor", desc: "5G pioneer in SA with unlimited data model. Attracting young, data-heavy users from traditional telcos.", doing: "Digital-first CX, app-only support, 5G experience feedback, community-driven support forums", badge: "Digital disruptor" },
+      ],
+    };
+
     let competitors: CompetitorCard[];
     if (form.competitors.trim()) {
-      competitors = form.competitors.split(",").map((c) => c.trim()).filter(Boolean).slice(0, 3).map((name) => ({
-        name,
-        stat: "Major competitor",
-        desc: `Actively investing in CX and customer intelligence programmes.`,
-        badge: "Active CX",
-      }));
+      // User provided specific competitors — use them with contextual descriptions
+      const names = form.competitors.split(",").map((c) => c.trim()).filter(Boolean).slice(0, 3);
+      const industryDefaults = INDUSTRY_COMPETITORS[form.industry] || [];
+      competitors = names.map((name, i) => {
+        // Check if this competitor has a pre-built profile
+        const match = industryDefaults.find(d => d.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(d.name.toLowerCase()));
+        if (match) return { ...match, name }; // Use researched data
+        return {
+          name,
+          stat: "Key competitor",
+          desc: `A significant player in the ${form.industry} space, actively investing in customer experience and digital transformation.`,
+          doing: "Customer feedback programmes, digital experience optimisation, competitive CX initiatives",
+          badge: "Active CX",
+        };
+      });
     } else {
-      competitors = [
-        { name: "Competitor A", stat: "Market leader", desc: "Running structured CX surveys across digital touchpoints.", badge: "Active CX programme" },
-        { name: "Competitor B", stat: "Fast-growing", desc: "AI-powered voice-of-customer analysis for real-time insights.", badge: "AI-driven insights" },
-        { name: "Competitor C", stat: "Innovative", desc: "Behavioural data and feedback loops powering personalised experiences.", badge: "Behavioural CX" },
+      competitors = INDUSTRY_COMPETITORS[form.industry] || [
+        { name: "Competitor A", stat: "Market leader", desc: "Running structured CX surveys across digital touchpoints to drive customer retention.", doing: "Customer surveys, NPS tracking, digital feedback loops, CX analytics dashboards", badge: "Active CX programme" },
+        { name: "Competitor B", stat: "Fast-growing challenger", desc: "AI-powered voice-of-customer analysis driving rapid product iteration and customer insights.", doing: "AI-powered sentiment analysis, real-time feedback, automated CX workflows", badge: "AI-driven insights" },
+        { name: "Competitor C", stat: "Digital-first innovator", desc: "Behavioural data and feedback loops powering highly personalised customer experiences.", doing: "Behavioural analytics, personalised journeys, predictive churn models", badge: "Behavioural CX" },
       ];
     }
 
