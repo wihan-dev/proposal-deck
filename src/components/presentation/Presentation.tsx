@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSlideNavigation } from "@/hooks/useSlideNavigation";
 import { slideTransition, ease } from "./animations";
@@ -54,6 +54,12 @@ const slideVariants = {
 
 const Presentation = () => {
   const { currentSlide, direction, goTo } = useSlideNavigation(slides.length);
+
+  // Lock scrolling on the presentation page
+  useEffect(() => {
+    document.documentElement.classList.add("presentation-mode");
+    return () => { document.documentElement.classList.remove("presentation-mode"); };
+  }, []);
 
   const handlePrint = useCallback(() => {
     window.print();

@@ -56,17 +56,20 @@
   }
 
   html {
-    overflow: hidden;
     overscroll-behavior: none;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: 'DM Sans', sans-serif;
-    overflow: hidden;
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Only lock scrolling on the presentation page, not admin */
+  html.presentation-mode, html.presentation-mode body {
+    overflow: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
