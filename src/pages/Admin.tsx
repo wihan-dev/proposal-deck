@@ -542,18 +542,44 @@ const Admin = () => {
                 <code className="text-sm font-medium">{generated.branchName}</code>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Vercel URL</span>
-                <span className="text-sm font-medium flex items-center gap-1" style={{ color: "hsl(86, 18%, 43%)" }}>
-                  proposal-deck-{generated.branchName}.vercel.app <ExternalLink className="w-3 h-3" />
-                </span>
+                <span className="text-sm text-muted-foreground">Live Deck</span>
+                <a
+                  href="https://proposal-deck.vercel.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium flex items-center gap-1 hover:underline"
+                  style={{ color: "hsl(86, 18%, 43%)" }}
+                >
+                  proposal-deck.vercel.app <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Custom domain</span>
-                <span className="text-sm text-muted-foreground">{generated.branchName}.deck.askyazi.com</span>
+                <span className="text-sm text-muted-foreground">{generated.branchName}.deck.askyazi.com (configure in Vercel)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">GitHub</span>
+                <a
+                  href="https://github.com/yazi-accounts/proposal-deck"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium flex items-center gap-1 text-foreground hover:underline"
+                >
+                  yazi-accounts/proposal-deck <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
             </div>
 
             <div className="flex gap-3 justify-center">
+              <a
+                href="https://proposal-deck.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 rounded-xl bg-foreground text-background text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View Live Deck
+              </a>
               <button
                 onClick={() => {
                   setStep(0);
